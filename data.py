@@ -1,7 +1,7 @@
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
-
+import os
 # 處理資料
 # 資料集取自 uci machine learning repository
 # 資料格式為.data [n_samples, n_features]，.target [n_samples]
@@ -10,8 +10,9 @@ import pandas as pd
 
 class Data():
 
-    def __init__(self, dataPath):
-        self.dataPath = dataPath
+    def __init__(self, dataName):
+
+        self.dataPath = os.path.join(os.getcwd(), "data", dataName)
         self.data: pd.DataFrame = None
         self.encodedData: pd.DataFrame = None
         self.labelEncoder = LabelEncoder()
