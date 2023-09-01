@@ -10,7 +10,7 @@ class RuleItem():
         self.lift: float = 0.0
         self.is_ruleitem = False
 
-    def set_ruleitem(self, item: dict, data: pd.DataFrame, min_support: float = 0.01, min_confidence: float = 0.1):
+    def set_ruleitem(self, item: dict, data: pd.DataFrame, min_support: float = 0.01, min_confidence: float = 0.1, min_lift: float = 0.0):
         # Declare Instance Variables
         support: float = 0.0
         condition_support: float = 0.0
@@ -35,12 +35,20 @@ class RuleItem():
         if support >= min_support:
             confidence = support / condition_support
             if confidence >= min_confidence:
+                lift = confidence / \
+                    (data[data["class"] == class_].shape[0] / data.shape[0])
+
+                if (min_lift != 0.0):
+                    if lift < min_lift:
+                        del data
+                        return False
+
                 self.conditions = conditions
                 self.class_ = class_
                 self.support = support
                 self.confidence = confidence
                 self.is_ruleitem = True
-                # self.lift = confidence / (data[data["class"] == class_].shape[0] / data.shape[0])
+                self.lift = lift
                 del data
                 return True
             else:

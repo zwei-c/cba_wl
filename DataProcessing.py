@@ -48,11 +48,21 @@ class DataProcessing():
         model.fit(X, y)
         self.feature_importances = model.feature_importances_
 
+    def split_train_test_data(self, test_size=0.2, random_state=42):
+        data = self.encoded_data
+        train_data = data.sample(
+            frac=1-test_size, random_state=random_state, ignore_index=True)
+        test_data = data.drop(train_data.index)
+        test_data.reset_index(drop=True, inplace=True)
+        return train_data, test_data
+
 
 if __name__ == "__main__":
     data_processing = DataProcessing("adult.data")
     data_processing.read_data()
     data_processing.process()
-    print(data_processing.encoded_data)
-    # data_processing.get_feature_importances()
-    # print(data_processing.feature_importances)
+    # print(data_processing.encoded_data)
+    # print(data_processing.encoded_data.columns)
+    print(data_processing.split_train_test_data())
+    data_processing.get_feature_importances()
+    print(data_processing.feature_importances)

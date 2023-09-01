@@ -3,11 +3,12 @@ import pandas as pd
 
 
 class Car():
-    def __init__(self, data: pd.DataFrame, min_support: float = 0.01, min_confidence: float = 0.1):
+    def __init__(self, data: pd.DataFrame, min_support: float = 0.01, min_confidence: float = 0.1, min_lift: float = 0.0):
         self.data = data
         self.label = list(self.data['class'].unique())
         self.min_support = min_support
         self.min_confidence = min_confidence
+        self.min_lift = min_lift
         self.rule: list = []  # class: ruleitem
 
     def generate_candidate(self, rule_temp):
@@ -49,11 +50,10 @@ class Car():
                 if new_item != None:
                     rule_item = RuleItem()
                     rule_item.set_ruleitem(
-                        new_item, self.data, self.min_support, self.min_confidence)
+                        new_item, self.data, self.min_support, self.min_confidence, self.min_lift)
                     if rule_item.is_ruleitem:
                         if rule_item.confidence > rule_temp[i].confidence and rule_item.confidence > rule_temp[j].confidence:
                             candidate.append(rule_item)
-        print(len(candidate))
         return candidate
 
     def generate_frequent(self):
@@ -61,16 +61,16 @@ class Car():
         data = self.data
         min_support = self.min_support
         min_confidence = self.min_confidence
+        min_lift = self.min_lift
         rule_temp = []
         for i in data.columns[:-1]:
             for j in data[i].unique():
                 for k in label:
                     ruleitem = RuleItem()
                     candidate = {'conditions': {i: j}, 'class': k}
-                    if (ruleitem.set_ruleitem(candidate, data, min_support, min_confidence)):
+                    if (ruleitem.set_ruleitem(candidate, data, min_support, min_confidence, min_lift)):
                         self.rule.append(ruleitem)
                         rule_temp.append(ruleitem)
-        print(len(rule_temp))
         while rule_temp != []:
             candidate = self.generate_candidate(rule_temp)
             rule_temp = []

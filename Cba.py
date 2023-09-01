@@ -6,6 +6,7 @@ class Cba():
         self.data = data
         self.rules = rules
         self.final_rules = []
+        self.final_rules_ = []
         self.default = str(self.data['class'].mode()[0])
 
     def cover(self):
@@ -38,6 +39,9 @@ class Cba():
                 error_index = index
         self.final_rules = self.final_rules[:error_index]
 
+        for rule in self.final_rules:
+            self.final_rules_.append(rule['rule'])
+
     def compare(self):
 
         def compare_sub(item, rule):
@@ -57,12 +61,14 @@ class Cba():
         test_data = self.data.drop(columns=['class'], axis=1)
 
         for item in test_data.iterrows():
+            check = False
             for rule in self.final_rules:
                 if compare_sub(item[1], rule['rule']):
                     test_data.loc[item[0], 'class'] = rule['rule'].class_
+                    check = True
                     break
-                else:
-                    test_data.loc[item[0], 'class'] = self.default
+            if not check:
+                test_data.loc[item[0], 'class'] = self.default
 
         error = get_errors(self.data, test_data)
         self.final_rules[-1]['error'] = error
