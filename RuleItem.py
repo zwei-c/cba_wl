@@ -68,3 +68,4 @@ class RuleItem():
         string += f"=> class={self.class_} "
         string += f"(support={self.support}, confidence={self.confidence}, lift={self.lift})"
         print(string)
+
