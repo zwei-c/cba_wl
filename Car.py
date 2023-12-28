@@ -1,15 +1,16 @@
-from RuleItem import RuleItem
+from RuleItem import RuleItem, RuleItem_Weight
 import pandas as pd
 
 
 class Car():
-    def __init__(self, data: pd.DataFrame, min_support: float = 0.01, min_confidence: float = 0.1, min_lift: float = 0.0):
+    def __init__(self, data: pd.DataFrame, min_support: float = 0.01, min_confidence: float = 0.1, min_lift: float = 0.0, weights=[]):
         self.data = data
         self.label = list(self.data['class'].unique())
         self.min_support = min_support
         self.min_confidence = min_confidence
         self.min_lift = min_lift
         self.rule: list = []  # class: ruleitem
+        self.weights = weights
 
     def generate_candidate(self, rule_temp):
 
@@ -48,7 +49,10 @@ class Car():
             for j in range(i+1, len(rule_temp)):
                 new_item = join(rule_temp[i], rule_temp[j])
                 if new_item != None:
-                    rule_item = RuleItem()
+                    if self.weights == []:
+                        rule_item = RuleItem()
+                    else:
+                        rule_item = RuleItem_Weight(self.weights)
                     rule_item.set_ruleitem(
                         new_item, self.data, self.min_support, self.min_confidence, self.min_lift)
                     if rule_item.is_ruleitem:
@@ -66,11 +70,14 @@ class Car():
         for i in data.columns[:-1]:
             for j in data[i].unique():
                 for k in label:
-                    ruleitem = RuleItem()
+                    if self.weights == []:
+                        rule_item = RuleItem()
+                    else:
+                        rule_item = RuleItem_Weight(self.weights)
                     candidate = {'conditions': {i: j}, 'class': k}
-                    if (ruleitem.set_ruleitem(candidate, data, min_support, min_confidence, min_lift)):
-                        self.rule.append(ruleitem)
-                        rule_temp.append(ruleitem)
+                    if (rule_item.set_ruleitem(candidate, data, min_support, min_confidence, min_lift)):
+                        self.rule.append(rule_item)
+                        rule_temp.append(rule_item)
         while rule_temp != []:
             candidate = self.generate_candidate(rule_temp)
             rule_temp = []
@@ -80,7 +87,28 @@ class Car():
                 self.rule.append(item)
                 rule_temp.append(item)
 
-    def sort_rule(self):
-        # sort by confidence > support > lift
-        self.rule.sort(key=lambda x: (
-            x.confidence, x.support, x.lift), reverse=True)
+    def sort_rule(self, type=1, hm=True):
+        """
+        sort_rule(type=1)
+        type = 1: sort by confidence > support > lift
+        type = 2: sort by hm(confidence, support, lift)
+        type = 3: sort by hm(confidence, weights_support)
+        """
+
+        if type == 1:
+            self.rule.sort(key=lambda x: (
+                x.confidence, x.support, x.lift), reverse=True)
+        elif type == 2:
+            if hm:
+                self.rule.sort(key=lambda x: (
+                    3/(1/x.support + 1/x.confidence + 1/x.lift)), reverse=False)
+            else:
+                self.rule.sort(key=lambda x: (
+                    (x.confidence + x.support + x.lift)/3), reverse=False)
+        elif type == 3:
+            if hm:
+                self.rule.sort(key=lambda x: (
+                    2/(1/x.confidence+1/x.weights_support)), reverse=False)
+            else:
+                self.rule.sort(key=lambda x: (
+                    (x.confidence + x.weights_support)/2), reverse=False)
