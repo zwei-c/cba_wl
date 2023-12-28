@@ -50,6 +50,27 @@ class DataProcessing():
         feature_importances = np.round(feature_importances+1, 3)
         self.feature_importances = feature_importances.tolist()
 
+    def delete_low_importance(self):
+        self.get_feature_importances()
+        feature_importances = self.feature_importances
+        feature_importances_ = []
+        threshold = 1 + 1/len(self.feature_importances)
+        delete_index = []
+        for index in range(len(feature_importances)):
+            if feature_importances[index] < threshold:
+                delete_index.append(index)
+            else:
+                feature_importances_.append(feature_importances[index])
+        # 刪除權重低於門檻值的屬性
+        self.encoded_data.drop(
+            self.encoded_data.columns[delete_index], axis=1, inplace=True)
+        # 重新編號
+        self.encoded_data.columns = range(self.encoded_data.shape[1])
+        self.encoded_data.rename(
+            {self.encoded_data.columns[-1]: "class"}, axis=1, inplace=True)
+
+        self.feature_importances = feature_importances_
+
     def split_train_test_data(self, test_size=0.2):
         data = self.encoded_data
         train_data = data.sample(
@@ -64,4 +85,5 @@ if __name__ == "__main__":
     data_processing.read_data()
     data_processing.process()
     data_processing.get_feature_importances()
+    data_processing.delete_low_importance()
     print(data_processing.feature_importances)

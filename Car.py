@@ -101,14 +101,14 @@ class Car():
         elif type == 2:
             if hm:
                 self.rule.sort(key=lambda x: (
-                    3/(1/x.support + 1/x.confidence + 1/x.lift)), reverse=False)
+                    3/(1/x.support + 1/x.confidence + 1/x.lift)), reverse=True)
             else:
                 self.rule.sort(key=lambda x: (
-                    (x.confidence + x.support + x.lift)/3), reverse=False)
+                    (x.confidence + x.support + x.lift)/3), reverse=True)
         elif type == 3:
             if hm:
                 self.rule.sort(key=lambda x: (
-                    2/(1/x.confidence+1/x.weights_support)), reverse=False)
+                    2/(1/x.confidence+1/x.weights_support)), reverse=True)
             else:
                 self.rule.sort(key=lambda x: (
-                    (x.confidence + x.weights_support)/2), reverse=False)
+                    (x.confidence + x.weights_support)/2), reverse=True)

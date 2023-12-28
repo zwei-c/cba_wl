@@ -5,7 +5,7 @@ warnings.filterwarnings("ignore")
 
 
 class Validation():
-    def __init__(self, data, rules, default, type='single'):
+    def __init__(self, data, rules, default, type='single', spare_rules=[]):
         self.data = data
         self.rules = rules
         self.default = default
@@ -13,7 +13,11 @@ class Validation():
         if (type == 'single'):
             self.forecast_result = self.predict()
         else:
-            self.forecast_result = self.predict_group()
+            if len(spare_rules) != 0:
+                self.spare_rules = spare_rules
+                self.forecast_result = self.predict_apr()
+            else:
+                self.forecast_result = self.predict_group()
         self.report = self.get_classification_report()
 
     def predict(self):
@@ -35,6 +39,43 @@ class Validation():
                     break
             if not check:
                 forecast_result.loc[index, 'class'] = str(self.default)
+        return list(forecast_result['class'])
+
+    def predict_apr(self):
+        """
+        投票預測
+        """
+        data_class = self.data['class'].unique()
+        forecast_result = self.data.drop(columns=['class'], axis=1)
+        for index in forecast_result.index:
+            _class = {}
+            for i in data_class:
+                _class[str(i)] = 0
+            check = None
+            for rule in self.rules:
+                check = True
+                conditions = rule.conditions
+                for condition in conditions:
+                    if forecast_result.loc[index, condition] != conditions[condition]:
+                        check = False
+                        break
+                if check:
+                    _class[str(rule.class_)] += 1
+            if not check:
+                for rule in self.spare_rules:
+                    check = True
+                    conditions = rule.conditions
+                    for condition in conditions:
+                        if forecast_result.loc[index, condition] != conditions[condition]:
+                            check = False
+                            break
+                    if check:
+                        _class[str(rule.class_)] += 1
+                        break
+            if not check:
+                _class[self.default] += 1
+            forecast_result.loc[index, 'class'] = str(max(
+                _class, key=_class.get))
         return list(forecast_result['class'])
 
     def predict_group(self):
